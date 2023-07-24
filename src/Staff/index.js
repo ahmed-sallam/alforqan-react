@@ -1,16 +1,18 @@
 import React, { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { AiTwotoneEdit } from 'react-icons/ai'
+import { PiLinkSimple } from 'react-icons/pi'
+
 import Modal from 'react-modal';
-import { collection, getDocs, addDoc, setDoc, doc, getDoc } from 'firebase/firestore'
-import { createUserWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth'
+import { collection, getDocs, setDoc, doc } from 'firebase/firestore'
+import { createUserWithEmailAndPassword } from 'firebase/auth'
 import { db, auth } from '../firebase'
 function Index() {
 
-
-    // const { state, pathname } = useLocation();
+    // todo : teacher name should be unique
+    const { state } = useLocation();
     // // const { userType, uid } = state
-    // const navigate = useNavigate()
+    const navigate = useNavigate()
     // const [user, setUSer] = useState(null)
 
 
@@ -80,32 +82,17 @@ function Index() {
         setStaff(staffData);
 
     }
+
+    const handleNavigate = (path, item) => {
+        const { job, name } = item
+        job == "مُحَفِظ" && navigate(path + "teacher/" + name)
+    }
+
+
     useEffect(() => {
         fetchData().catch(error => { console.log("Staff fetch data error", error); })
     }, [])
 
-    // useEffect(() => {
-    //     console.log("ccc", state);
-    //     onAuthStateChanged(auth, async (user) => {
-    //         if (user) {
-    //             // setUSer(user)
-    //             const uid = user.uid;
-    //             const docRef = doc(db, "staff", uid)
-    //             const docSnap = await getDoc(docRef);
-    //             const data = docSnap.data()
-    //             setUSer(data)
-
-    //             if ((data.job == "مدير الدورة" || data.job == "المشرف التعليمي") && pathname == "/dash/staff") {
-    //                 // navigate("/dash/staff", { state: data })
-    //             } else {
-    //                 navigate("/dash/students", { state: data })
-    //             }
-
-    //         } else {
-    //             navigate("/login")
-    //         }
-    //     })
-    // }, [])
     return (
         <div className='p-6 relative'>
             <h1 className='font-bold text-2xl mb-5'>فريق العمل</h1>
@@ -151,7 +138,11 @@ function Index() {
                                                 {item.username}
                                             </td>
                                             <td className="border p-4 border-dark-500 text-xl">
-                                                <AiTwotoneEdit className='m-auto text-scolor-1000' />
+                                                <div className=' inline-block'>
+                                                    <AiTwotoneEdit className='mx-2 text-scolor-1000' />
+                                                </div>
+                                                <div className='cursor-pointer inline-block' onClick={() => handleNavigate('/dash/', item)}>
+                                                    <PiLinkSimple className='mx-2 text-scolor-1000' /></div>
                                             </td>
                                         </tr>
                                     )
@@ -165,8 +156,16 @@ function Index() {
                     <div>There are no data</div>}
 
             </div>
+            {
+                (state?.job == "مدير الدورة" || state?.job == "المشرف التعليمي") ?
 
-            <div className='rounded-full bg-scolor-1000 w-12 h-12  p-1  text-white text-3xl flex justify-center align-center fixed bottom-10 left-10 cursor-pointer' onClick={openModal}><span>+</span></div>
+                    (
+                        <div className='rounded-full bg-scolor-1000 w-12 h-12  p-1  text-white text-3xl flex justify-center align-center fixed bottom-10 left-10 cursor-pointer' onClick={openModal}><span>+</span></div>
+                    ) : ""
+
+            }
+
+
 
 
             <Modal
@@ -274,5 +273,8 @@ function Index() {
         </div >
     )
 }
+
+
+
 
 export default Index

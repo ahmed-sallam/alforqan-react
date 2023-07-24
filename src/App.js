@@ -5,7 +5,7 @@ import Layout from './Layout'
 import Staff from './Staff'
 import Students from './Students'
 import Exam from './Exam'
-import PrivateRoute from './PrivateRoute'
+import Teacher from './Teacher'
 import { Route, BrowserRouter, Routes } from 'react-router-dom';
 import ProtectedLayout from './Layout/ProtectedLayout';
 
@@ -16,12 +16,12 @@ function App() {
     <BrowserRouter >
       <Routes >
         <Route path='/' element={<Layout />}>
-
           <Route path='/login' element={<Login />} index />
           <Route path='/dash' element={<ProtectedLayout />}>
             <Route path='staff' element={<Staff />} />
             <Route path='students' element={<Students />} />
             <Route path='exam/:id' element={<Exam />} />
+            <Route path='teacher/:name' element={<Teacher />} />
 
           </Route>
         </Route>

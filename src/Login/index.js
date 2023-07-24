@@ -54,12 +54,13 @@ function Index() {
                     const docSnap = await getDoc(docRef);
                     const data = docSnap.data()
                     setUSer(data)
+                    // navigate("/dash/staff", { state: data })
 
-                    if (data.job == "مدير الدورة" || data.job == "المشرف التعليمي") {
-                        navigate("/dash/staff", { state: data })
-                    } else {
-                        navigate("/dash/students", { state: data })
-                    }
+                    // if (data.job == "مدير الدورة" || data.job == "المشرف التعليمي") {
+                    //     navigate("/dash/staff", { state: data })
+                    // } else {
+                    //     navigate("/dash/students", { state: data })
+                    // }
                     // navigate(toPath, { state: { userType, uid } })
                 } else {
                     navigate("/login")

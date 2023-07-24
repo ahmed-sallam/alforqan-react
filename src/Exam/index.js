@@ -1,19 +1,19 @@
 import React, { useState, useEffect } from 'react'
 import { AiTwotoneEdit, AiOutlineEye } from 'react-icons/ai'
 import Modal from 'react-modal'
-import { collection, query, getDocs, addDoc, doc, getDoc, updateDoc, where } from 'firebase/firestore'
-import { onAuthStateChanged } from 'firebase/auth'
-import { db, auth } from '../firebase'
+import { collection, query, getDocs, doc, getDoc, updateDoc, where } from 'firebase/firestore'
+import { db } from '../firebase'
 import { useParams } from 'react-router-dom';
 import { useNavigate, useLocation } from 'react-router-dom'
 
 function Index() {
-    const navigate = useNavigate();
     const { state } = useLocation();
     // const { userType, uid } = state
 
 
     const [modalIsOpen, setIsOpen] = useState(false);
+    const [resultModal, setResultModal] = useState(false);
+    const [resultModalData, setResultModalData] = useState({});
     const [student, setStudent] = useState({});
     const [teachers, setTeachers] = useState([]);
     const [part, setPart] = useState(0);
@@ -42,12 +42,7 @@ function Index() {
     const [q3lv, setQ3lv] = useState(0);
     const [q3j, setQ3j] = useState(new Array(6).fill(false));
     const [q3jv, setQ3jv] = useState(0);
-    const [q4m, setQ4m] = useState(new Array(6).fill(false));
-    const [q4mv, setQ4mv] = useState(0);
-    const [q4l, setQ4l] = useState(new Array(6).fill(false));
-    const [q4lv, setQ4lv] = useState(0);
-    const [q4j, setQ4j] = useState(new Array(6).fill(false));
-    const [q4jv, setQ4jv] = useState(0);
+
 
 
     Modal.setAppElement('#root');
@@ -204,7 +199,7 @@ function Index() {
             q4,
             subTotal: q1 + q2 + q3 + q4,
             date,
-            teacher,
+            teacher: state.name, // this if just the login user whose will make the exam
 
         }
 
@@ -235,8 +230,22 @@ function Index() {
             totalParts: newTotalParts
         })
     }
+    function formatAsPercentage(num) {
+        return new Intl.NumberFormat('default', {
+            style: 'percent',
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        }).format(num / 100);
+    }
+
+    function openResultModal(i) {
+        setResultModalData(i)
+        setResultModal(true)
+
+        console.log("rrrrresults ", resultModalData);
+    }
     function openModal(i) {
-        if (i.subTotal >= 60) {
+        if (i.subTotal >= 60 || state.job != "مُختَبِر") {
             setIsOpen(false);
         } else {
 
@@ -252,6 +261,9 @@ function Index() {
         // references are now sync'd and can be accessed.
     }
 
+    function closeResultModal() {
+        setResultModal(false);
+    }
     function closeModal() {
         setIsOpen(false);
         resetModalData()
@@ -299,31 +311,6 @@ function Index() {
     }
 
 
-    // useEffect(() => {
-    //     console.log("start auth");
-
-
-    //     try {
-    //         onAuthStateChanged(auth, (user) => {
-    //             if (user) {
-    //                 console.log("mid auth", user);
-    //                 console.log("mid auth", userType, uid, user);
-
-    //                 // if (userType !== "admin") {
-    //                 //     navigate("/dash/students", { state: { userType, uid } })
-    //                 // }
-    //             } else {
-    //                 navigate("/login")
-    //             }
-    //         })
-    //     } catch (error) {
-    //         navigate("/login")
-    //     }
-
-    //     console.log("end auth");
-
-
-    // }, [])
     return (
 
         <div className='p-6 relative '>
@@ -334,7 +321,7 @@ function Index() {
                         <h1 className='font-extrabold text-3xl'>{student.name}</h1>
                         <div className='flex flex-row justify-between'>
                             <div className='flex flex-row justify-between p-2 '><p className='ml-4 font-bold' >عدد الاجزاء</p> <span>{student.totalParts}</span></div>
-                            <div className='flex flex-row justify-between p-2  '><p className='ml-4 font-bold'>المعدل</p> <span>{student.average}</span></div>
+                            <div className='flex flex-row justify-between p-2  '><p className='ml-4 font-bold'>المعدل</p> <span>{formatAsPercentage(student.average)}</span></div>
                         </div>
                         <div className='flex flex-row justify-between'>
                             <div className='flex flex-row justify-between p-2  '><p className='ml-4 font-bold' >المجموع</p> <span>{student.total}</span></div>
@@ -407,7 +394,7 @@ function Index() {
                                 </td>
                                 <td className="border p-4 border-dark-500 text-xl flex">
                                     <AiTwotoneEdit className='m-auto text-scolor-1000 m-2' onClick={() => openModal(item)} />
-                                    <AiOutlineEye className='m-auto text-scolor-1000 m-2' onClick={() => openModal(item)} />
+                                    <AiOutlineEye className='m-auto text-scolor-1000 m-2' onClick={() => openResultModal(item)} />
                                 </td>
                             </tr>
                         ))}
@@ -575,14 +562,7 @@ function Index() {
                                         {state?.job == "مُختَبِر" ? state.name : "لا يمكنك إجراء الاختبار"}
                                     </option>
 
-                                    {/* <option>
-                                إختر المُختَبِر
-                            </option>
-                            {teachers.map((item, i) => (
-                                <option key={i} >
-                                    {item.name}
-                                </option>
-                            ))} */}
+
 
                                 </select>
                             </div>
@@ -598,6 +578,181 @@ function Index() {
                         </div>)
                         : <div className='text-center'>لا يمكنك إجراء الاختبار</div>}
 
+                </div>
+
+            </Modal >
+            <Modal
+                isOpen={resultModal}
+                onAfterOpen={afterOpenModal}
+                onRequestClose={closeResultModal}
+                style={{
+                    content: {
+                        top: '50%',
+                        left: '50%',
+                        right: 'auto',
+                        bottom: 'auto',
+                        marginRight: '-50%',
+                        transform: 'translate(-50%, -50%)',
+                        width: '500px',
+                        maxWidth: '100%'
+                    },
+                }}
+            // contentLabel="Example Modal"
+
+            >
+                <div className="relative mt-6">
+                    <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-gray-300">
+                        </div>
+                    </div>
+                    <div className="relative flex justify-center text-sm leading-5">
+                        <span className="px-2 font-bold bg-white ">
+                            نتيجة إختبار الجزء {resultModalData.part}
+                        </span>
+                    </div>
+                </div>
+                {/* <div>
+
+                </div> */}
+                <div className="mt-6">
+                    <div className="w-full space-y-6">
+
+
+                        <div className="w-full  flex flex-row border-b pb-2 justify-between">
+                            <div className="flex flex-row justify-start">   <div className="p-6 font-extrabold w-20">
+                                س1
+                            </div>
+                                <div className="flex flex-col">
+                                    <div className='flex flex-row'>
+                                        <h3 className='w-20'>خطأ</h3>
+                                        <div>
+                                            {[1, 2, 3, 4, 5, 6].map((item, i) =>
+                                                <input type='checkbox' disabled={true} className='m-2' checked={i + 1 <= resultModalData.q1?.m ? true : false} />
+                                            )}
+
+                                        </div>
+
+                                    </div>
+                                    <div className='flex flex-row'>
+                                        <h3 className='w-20'>لحن خفي</h3>
+                                        <div>
+                                            {[1, 2, 3, 4, 5, 6].map((item, i) =>
+                                                <input type='checkbox' disabled={true} className='m-2' checked={i + 1 <= resultModalData.q1?.l ? true : false} />
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className='flex flex-row'>
+                                        <h3 className='w-20'>لحن جلي</h3>
+                                        <div>
+                                            {[1, 2, 3, 4, 5, 6].map((item, i) =>
+                                                <input type='checkbox' disabled={true} className='m-2' checked={i + 1 <= resultModalData.q1?.j ? true : false} />
+                                            )}
+                                        </div>
+                                    </div>
+                                </div></div>
+                            <div className='p-4 font-extrabold rounded border-2 flex items-center justify-center'>{resultModalData.q1?.total}</div>
+                        </div>
+                        <div className="w-full  flex flex-row border-b pb-2 justify-between">
+                            <div className="flex flex-row justify-start">   <div className="p-6 font-extrabold w-20">
+                                س2
+                            </div>
+                                <div className="flex flex-col">
+                                    <div className='flex flex-row'>
+                                        <h3 className='w-20'>خطأ</h3>
+                                        <div>
+                                            {[1, 2, 3, 4, 5, 6].map((item, i) =>
+                                                <input type='checkbox' disabled={true} className='m-2' checked={i + 1 <= resultModalData.q2?.m ? true : false} />
+                                            )}
+
+                                        </div>
+
+                                    </div>
+                                    <div className='flex flex-row'>
+                                        <h3 className='w-20'>لحن خفي</h3>
+                                        <div>
+                                            {[1, 2, 3, 4, 5, 6].map((item, i) =>
+                                                <input type='checkbox' disabled={true} className='m-2' checked={i + 1 <= resultModalData.q2?.l ? true : false} />
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className='flex flex-row'>
+                                        <h3 className='w-20'>لحن جلي</h3>
+                                        <div>
+                                            {[1, 2, 3, 4, 5, 6].map((item, i) =>
+                                                <input type='checkbox' disabled={true} className='m-2' checked={i + 1 <= resultModalData.q2?.j ? true : false} />
+                                            )}
+                                        </div>
+                                    </div>
+                                </div></div>
+                            <div className='p-4 font-extrabold rounded border-2 flex items-center justify-center'>{resultModalData.q2?.total}</div>
+                        </div>
+                        <div className="w-full  flex flex-row border-b pb-2 justify-between">
+                            <div className="flex flex-row justify-start">   <div className="p-6 font-extrabold w-20">
+                                س3
+                            </div>
+                                <div className="flex flex-col">
+                                    <div className='flex flex-row'>
+                                        <h3 className='w-20'>خطأ</h3>
+                                        <div>
+                                            {[1, 2, 3, 4, 5, 6].map((item, i) =>
+                                                <input type='checkbox' disabled={true} className='m-2' checked={i + 1 <= resultModalData.q3?.m ? true : false} />
+                                            )}
+
+                                        </div>
+
+                                    </div>
+                                    <div className='flex flex-row'>
+                                        <h3 className='w-20'>لحن خفي</h3>
+                                        <div>
+                                            {[1, 2, 3, 4, 5, 6].map((item, i) =>
+                                                <input type='checkbox' disabled={true} className='m-2' checked={i + 1 <= resultModalData.q3?.l ? true : false} />
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className='flex flex-row'>
+                                        <h3 className='w-20'>لحن جلي</h3>
+                                        <div>
+                                            {[1, 2, 3, 4, 5, 6].map((item, i) =>
+                                                <input type='checkbox' disabled={true} className='m-2' checked={i + 1 <= resultModalData.q3?.j ? true : false} />
+                                            )}
+                                        </div>
+                                    </div>
+                                </div></div>
+                            <div className='p-4 font-extrabold rounded border-2 flex items-center justify-center'>{resultModalData.q3?.total}</div>
+                        </div>
+
+
+                        <div className=" relative w-full flex flex-row justify-center items-center">
+                            <h3 className='ml-4 font-bold'>الاداء</h3>
+                            <input type="number" disabled={true} max='25' id="rounded-email" className=" rounded-lg border-transparent flex-1 appearance-none border border-gray-300 w-full py-2 px-4 bg-white text-gray-700 placeholder-gray-400 shadow-sm text-base focus:outline-none focus:ring-2 focus:ring-mcolor-600 focus:border-transparent" placeholder="الاداء" value={resultModalData.q4} />
+                        </div>
+
+
+                        <div className=" relative w-full flex flex-row justify-center items-center">
+                            <h3 className='ml-4 font-bold'>التاريخ</h3>
+                            <input type="date" disabled={true} max='25' id="date" className=" rounded-lg border-transparent flex-1 appearance-none border border-gray-300 w-full py-2 px-4 bg-white text-gray-700 placeholder-gray-400 shadow-sm text-base focus:outline-none focus:ring-2 focus:ring-mcolor-600 focus:border-transparent" placeholder="التاريخ" value={resultModalData.date} />
+                        </div>
+
+                        <div className=" relative w-full flex flex-row justify-center items-center">
+                            <h3 className='ml-4 font-bold'>المُختَبِر</h3>
+
+                            <select disabled={true} max='25' id="teacher" className=" rounded-lg border-transparent flex-1 appearance-none border border-gray-300 w-full py-2 px-4 bg-white text-gray-700 placeholder-gray-400 shadow-sm text-base focus:outline-none focus:ring-2 focus:ring-mcolor-600 focus:border-transparent" placeholder="المُختَبِر" value={resultModalData.teacher}  >
+                                <option>
+                                    {resultModalData.teacher}
+                                </option>
+
+                            </select>
+                        </div>
+
+                    </div>
+
+                    <div>
+                        <span className="block w-full rounded-md shadow-sm">
+                            <button type="button" disabled className="py-2 px-4 mt-2  bg-mcolor-900 hover:bg-scolor-1000 focus:ring-mcolor-500 focus:ring-offset-mcolor-200 text-white w-full transition ease-in duration-200 text-center text-base font-semibold shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2  rounded-lg " >
+                                {resultModalData.subTotal}
+                            </button>
+                        </span>
+                    </div>
                 </div>
 
             </Modal >

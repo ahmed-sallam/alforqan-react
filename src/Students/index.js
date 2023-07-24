@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import { PiLinkSimple } from 'react-icons/pi'
-import { Link } from 'react-router-dom'
+
 import Modal from 'react-modal';
-import { collection, getDocs, addDoc, setDoc, doc, query, where } from 'firebase/firestore'
-import { onAuthStateChanged } from 'firebase/auth'
+import { collection, getDocs, setDoc, doc, query, where } from 'firebase/firestore'
+
 import { db, auth } from '../firebase';
 import { useNavigate, useLocation } from 'react-router-dom'
 

@@ -1,18 +1,14 @@
-import React, { useEffect, useState } from 'react'
-import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import React from 'react'
+import { Outlet, useNavigate } from 'react-router-dom'
 import { AiOutlineTeam } from 'react-icons/ai'
 import { PiStudentBold } from 'react-icons/pi'
-import { signOut, onAuthStateChanged } from "firebase/auth";
-import { doc, getDoc } from 'firebase/firestore';
-import { auth, db } from '../firebase';
+import { signOut } from "firebase/auth";
+import { auth } from '../firebase';
 
 function ProtectedLayout
     () {
     const navigate = useNavigate();
-    // const loc = useLocation();
-    const { pathname, state } = useLocation();
-    // const { userType, uid } = state
-    const [user, setUSer] = useState(null)
+    // const [user, setUSer] = useState(null)
 
     const handleLogout = () => {
         signOut(auth).then(() => {
@@ -24,44 +20,8 @@ function ProtectedLayout
 
     const handleNavigate = (path) => {
         navigate(path)
-        // navigate(path, { state: { userType, uid } })
     }
 
-
-    useEffect(() => {
-        console.log("ccc", state);
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                // setUSer(user)
-                const uid = user.uid;
-                const docRef = doc(db, "staff", uid)
-                const docSnap = await getDoc(docRef);
-                const data = docSnap.data()
-                setUSer(data)
-
-                if ((data.job == "مدير الدورة" || data.job == "المشرف التعليمي") && pathname == "/dash/staff") {
-                    navigate(pathname, { state: data })
-                } else {
-                    console.log("pp", pathname);
-                    navigate(pathname != "/dash/staff" ? pathname : "/dash/students", { state: data })
-                }
-
-            } else {
-                navigate("/login")
-            }
-        })
-    }, [pathname])
-
-    useEffect(() => {
-
-        if ((user?.job == "مدير الدورة" || user?.job == "المشرف التعليمي")) {
-            navigate("/dash/staff", { state: user })
-        } else {
-            navigate("/dash/students", { state: user })
-        }
-
-
-    }, [])
     return (
         <div className='flex flex-row w-full  ' style={{ height: "calc(100vh - 64px)" }}>
             <div className='flex flex-col justify-between w-72 h-full shadow-xl px-3 py-5' style={{ backgroundColor: "white" }} >
